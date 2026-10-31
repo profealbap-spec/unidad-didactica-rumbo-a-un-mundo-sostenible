@@ -249,7 +249,7 @@ button{cursor:pointer}
 .pj{position:absolute;bottom:0;height:88%;max-width:46%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));transition:filter .3s,transform .3s;transform-origin:bottom center;animation:pjEntra .5s cubic-bezier(.3,1.4,.5,1) both;pointer-events:none}
 .pj.izq{left:-1%;object-position:bottom left}
 .pj.der{right:-1%;object-position:bottom right}
-.pj.calla{filter:brightness(.5) saturate(.6) drop-shadow(0 8px 14px rgba(0,0,0,.4));transform:scale(.92)}
+.pj.calla{filter:brightness(.85) saturate(.9) drop-shadow(0 8px 14px rgba(0,0,0,.35));transform:scale(.95)}
 .pj.habla{transform:scale(1.02)}
 @keyframes pjEntra{from{transform:translateY(30%);opacity:0}to{opacity:1}}
 .dlg{--c:#1f5fff;position:absolute;bottom:max(12px,env(safe-area-inset-bottom,0px));background:var(--blanco);color:var(--tinta);border:4px solid var(--c);border-radius:24px;padding:clamp(14px,4vh,22px) clamp(14px,2vw,22px) clamp(10px,3vh,16px);box-shadow:0 6px 0 var(--navy),0 14px 30px rgba(0,0,0,.35);cursor:pointer;z-index:2;animation:subir .35s ease both}
@@ -2003,10 +2003,12 @@ var IMG_ESTUDIANTES = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
       fondo(p.fondo);
       linea = 0;
       var html = "";
+      // En escenas de dos personajes: el primero a la izquierda y el segundo a la derecha
+      p._lado = {}; p.escena.forEach(function(k, i){ p._lado[k] = p.escena.length === 2 ? (i === 0 ? "izq" : "der") : (PJ[k].lado || "izq"); });
       p.escena.forEach(function(k){
         var primera = p.lineas.filter(function(l){ return l.p === k; })[0];
         var e = (primera && primera.e) || PJ[k].base;
-        html += '<img class="pj '+PJ[k].lado+'" data-pj="'+k+'" src="'+PJ[k].img[e]+'" alt="'+PJ[k].nombre+'">';
+        html += '<img class="pj '+p._lado[k]+'" data-pj="'+k+'" src="'+PJ[k].img[e]+'" alt="'+PJ[k].nombre+'">';
       });
       html += '<div class="dlg" id="dlg" role="button" tabindex="0" aria-live="polite"><span class="dlg-nombre" id="dlg-nombre"></span><p id="dlg-txt"></p><span class="dlg-sig" aria-hidden="true">▼</span></div>';
       html += '<div class="toca-aviso">Toca para continuar</div>';
@@ -2024,7 +2026,7 @@ var IMG_ESTUDIANTES = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
       });
       var d = $("dlg");
       var solo = p.escena.length === 1;
-      d.className = "dlg " + (pj.lado === "izq" ? "a-der" : "a-izq") + (solo ? " solo" : "");
+      d.className = "dlg " + (p._lado[l.p] === "izq" ? "a-der" : "a-izq") + (solo ? " solo" : "");
       d.style.setProperty("--c", pj.color);
       $("dlg-nombre").textContent = pj.nombre;
       var full = txt(l.x), el = $("dlg-txt"), k = 0;
