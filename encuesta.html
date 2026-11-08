@@ -27,13 +27,13 @@ header h1 small{display:block;font-size:.6em;color:var(--oro);letter-spacing:.06
 .etq{align-self:flex-start;color:#fff;font-weight:800;font-size:14px;border-radius:999px;padding:3px 12px}
 .item{font-weight:800;font-size:clamp(19px,4.6vw,28px);line-height:1.15;margin:0}
 p{margin:0;font-size:17px;line-height:1.4;font-weight:600}
-.escala{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:auto}
-.op{--lc:#fff;font:inherit;cursor:pointer;border:3px solid color-mix(in srgb,var(--lc) 70%,var(--navy));background:color-mix(in srgb,var(--lc) 28%,#fff);border-radius:16px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--navy);font-size:13px;line-height:1.1;font-weight:700;min-height:64px}
-.op b{font-size:26px;line-height:1;color:color-mix(in srgb,var(--lc) 55%,var(--navy))}
+.escala{display:grid;grid-template-columns:1fr;gap:8px;max-width:560px;width:100%}
+.op{--lc:#fff;font:inherit;cursor:pointer;border:3px solid color-mix(in srgb,var(--lc) 70%,var(--navy));background:color-mix(in srgb,var(--lc) 28%,#fff);border-radius:14px;padding:6px 14px;display:flex;flex-direction:row;align-items:center;gap:12px;color:var(--navy);font-size:16px;line-height:1.15;font-weight:700;min-height:48px;text-align:left}
+.op b{font-size:24px;width:20px;text-align:center;flex:none;line-height:1;color:color-mix(in srgb,var(--lc) 55%,var(--navy))}
 .op[data-v="1"]{--lc:#e5484d}.op[data-v="2"]{--lc:#f5873b}.op[data-v="3"]{--lc:#f2c230}.op[data-v="4"]{--lc:#8bcf3a}.op[data-v="5"]{--lc:#2f9e44}
 .op.sel{background:var(--lc);color:#fff;border-color:var(--navy);box-shadow:0 3px 0 var(--navy);transform:translateY(-2px)}
 .op.sel b{color:#fff}.op[data-v="3"].sel,.op[data-v="3"].sel b{color:var(--navy)}
-@media (max-width:520px){header img{height:38px}header h1{font-size:17px}.escala{grid-template-columns:1fr}.op{flex-direction:row;justify-content:flex-start;gap:12px;min-height:48px;padding:6px 14px;font-size:15px}}
+@media (max-width:520px){header img{height:38px}header h1{font-size:17px}.op{font-size:15px}}
 .nav{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .btn{font:inherit;font-weight:800;font-size:18px;border:3px solid var(--navy);border-radius:14px;padding:8px 18px;min-height:48px;cursor:pointer;background:var(--lima);color:var(--navy);box-shadow:0 4px 0 var(--navy)}
 .btn:disabled{background:#c9d3c0;color:#6b7a8f;cursor:not-allowed}
