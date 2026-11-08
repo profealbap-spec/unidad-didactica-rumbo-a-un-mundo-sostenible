@@ -7,7 +7,7 @@ Misiones:
 2. Fronteras sin límites
 3. Colombia sostenible
 4. Economía sostenible
-5. Misión Bonus · Nivel Súper Experto (cuestionario de percepción y motivación)
+5. Misión Bonus · Nivel Súper Experto (cuestionario de percepción y motivación), también disponible por separado en `encuesta.html`
 
 Diseñada para celular en horizontal. Autoras: Alba Prada y Grace De La Rans Palacio.
 Maestría en Recursos Digitales Aplicados a la Educación · Universidad de Cartagena.
