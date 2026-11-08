@@ -646,6 +646,8 @@ button{cursor:pointer}
 .parada.bonus.hecha .p-tarjeta em{background:#c98a12}
 .lk-final{align-items:center;text-align:center;margin:auto}
 .lk-estrella{font-size:clamp(40px,16vh,80px);line-height:1;color:#f2b51c;text-shadow:0 4px 0 var(--navy);animation:insEntra 1s cubic-bezier(.3,1.5,.5,1) both}
+.act-vertical{margin:2px 0 0;display:flex;gap:8px;align-items:center;background:#fff4c2;border:2px solid #e2a62a;border-radius:12px;padding:5px 10px;font-size:clamp(12px,3.4vh,14px);line-height:1.25;color:var(--navy)}
+.act-vertical svg{width:22px;height:22px;flex:none;animation:girar 2.2s ease-in-out infinite}
 /* mapa de misiones */
 .mapa{position:relative;flex:1;min-height:0;overflow:hidden}
 .mapa-camino{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
@@ -1319,6 +1321,13 @@ var IMG_ESTUDIANTES = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
     }catch(e){}
   }
 
+  function liberarPantalla(){
+    try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+    try{
+      if(document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function(){});
+      else if(document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }catch(e){}
+  }
   var nombre = "", curso = leer("rams_curso") || "";
 
   /* ---------- Registro del progreso en Google Sheets ---------- */
@@ -1569,13 +1578,13 @@ var IMG_ESTUDIANTES = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
     var TIPOS = {
       video:   { etq:"Video", color:"#ff2d2d", abrir:"Ver video", listo:"Ya lo vi", nota:"Se abre en YouTube. Cuando termines, regresa a esta pestaña.",
                  ico:'<path d="M24 18l24 14-24 14z" fill="#fff"/>' },
-      kahoot:  { etq:"Kahoot", color:"#46178f", abrir:"Ir al Kahoot", listo:"Ya terminé", nota:"Se abre Kahoot. Al terminar el reto, regresa a esta pestaña.",
+      kahoot:  { etq:"Kahoot", color:"#46178f", abrir:"Ir al Kahoot", listo:"Ya terminé", vertical:true, nota:"Se abre Kahoot. Al terminar el reto, regresa a esta pestaña.",
                  ico:'<text x="32" y="44" text-anchor="middle" font-size="34" font-weight="800" fill="#fff" font-family="Arial">K!</text>' },
       wordwall:{ etq:"Wordwall", color:"#1e74d6", abrir:"Jugar en Wordwall", listo:"Ya terminé", nota:"Se abre Wordwall. Al terminar el juego, regresa a esta pestaña.",
                  ico:'<path d="M14 20h14v14H14zM36 20h14v14H36zM14 38h14v8H14zM36 38h14v8H36z" fill="#fff"/>' },
       genially:{ etq:"Genially", color:"#2f63e8", abrir:"Abrir el juego", listo:"Ya terminé", nota:"",
                  ico:'<circle cx="32" cy="32" r="18" fill="none" stroke="#fff" stroke-width="6"/><path d="M32 32h14" stroke="#fff" stroke-width="6"/>' },
-      wayground:{ etq:"Wayground", color:"#8e2bd8", abrir:"Entrar al reto", listo:"Ya terminé", nota:"Se abre Wayground. Al terminar el reto, regresa a esta pestaña.",
+      wayground:{ etq:"Wayground", color:"#8e2bd8", abrir:"Entrar al reto", listo:"Ya terminé", vertical:true, nota:"Se abre Wayground. Al terminar el reto, regresa a esta pestaña.",
                  ico:'<path d="M14 40l10-18 8 12 6-8 12 14z" fill="#fff"/><circle cx="44" cy="20" r="5" fill="#fff"/>' },
       lectura: { etq:"Lectura", color:"#e07a12", abrir:"Leer el artículo", listo:"Ya leí", nota:"Se abre en otra pestaña. Cuando termines de leer, regresa aquí.",
                  ico:'<path d="M10 16c8-3 15-2 22 3v30c-7-5-14-6-22-3zM54 16c-8-3-15-2-22 3v30c7-5 14-6 22-3z" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><path d="M32 19v30" stroke="#e07a12" stroke-width="3"/>' }
@@ -2092,9 +2101,12 @@ var IMG_ESTUDIANTES = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
             '<div class="act-botones">'+
               '<a class="btn btn-abrir" id="j-abrir" href="'+esc(p.url)+'" target="_blank" rel="noopener" style="--tc:'+T.color+'">'+T.abrir+' '+externo()+'</a>'+ listo +
             '</div>'+
+            (T.vertical ? '<p class="act-vertical"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span><b>Gira tu celular en vertical</b> para jugar '+T.etq+'. Al volver, gíralo otra vez en horizontal.</span></p>' : '')+
             (conCodigo ? '<form class="codigo" id="j-codform" autocomplete="off"><label for="j-cod">Código secreto</label><input id="j-cod" type="text" placeholder="Escríbelo aquí" autocapitalize="characters" spellcheck="false"'+(hecho?' value="'+esc(p.codigo)+'" disabled':'')+'><button class="btn btn-claro" type="submit"'+(hecho?' disabled':'')+'>Validar</button></form><p class="cod-msg" id="j-codmsg">'+(hecho?'¡Código correcto!':'')+'</p>'
                        : '<p class="act-nota">'+T.nota+'</p>')+
           '</div></div>';
+        // Al abrir una actividad externa: salir de pantalla completa y liberar la orientación
+        $("j-abrir").addEventListener("click", liberarPantalla);
         if(conCodigo){
           var norma = function(s){ return String(s).toUpperCase().normalize("NFD").replace(/[̀-ͯ\s]/g,""); };
           $("j-codform").addEventListener("submit", function(ev){
