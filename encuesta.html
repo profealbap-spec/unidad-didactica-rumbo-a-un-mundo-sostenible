@@ -132,7 +132,7 @@ var LIKERT = {
         '<div class="escala">'+LIKERT.escala.map(function(e, i){ return '<button type="button" class="op'+(resp[paso]===i+1?' sel':'')+'" data-v="'+(i+1)+'"><b>'+(i+1)+'</b>'+e+'</button>'; }).join("")+'</div>'+
         '<div class="nav"><button class="btn sec" id="atr" type="button">◂ Atrás</button><button class="btn" id="sig" type="button"'+(resp[paso]?'':' disabled')+'>Siguiente ▸</button></div>';
     } else {
-      h = '<p class="item">Preguntas abiertas</p><p>Responde las dos preguntas para poder enviar.</p>'+LIKERT.abiertas.map(function(q, i){ return '<label for="ab'+i+'">'+(i+1)+'. '+q+'</label><textarea id="ab'+i+'" maxlength="500"></textarea>'; }).join("")+
+      h = '<p class="item">Preguntas abiertas (opcional)</p>'+LIKERT.abiertas.map(function(q, i){ return '<label for="ab'+i+'">'+(i+1)+'. '+q+'</label><textarea id="ab'+i+'" maxlength="500"></textarea>'; }).join("")+
         '<p class="error" id="err"></p><div class="nav"><button class="btn sec" id="atr" type="button">◂ Atrás</button><button class="btn" id="env" type="button">Enviar respuestas ▸</button></div>';
     }
     c.innerHTML = h; c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
@@ -154,10 +154,6 @@ var LIKERT = {
     if($("env")) $("env").onclick = function(){
       var faltan = items.map(function(_, i){ return resp[i] ? 0 : i+1; }).filter(Boolean);
       if(faltan.length){ $("err").textContent = "Te faltan los ítems: " + faltan.join(", ") + ". Usa «Atrás» para responderlos."; return; }
-      for(var q = 0; q < LIKERT.abiertas.length; q++){
-        var campo = $("ab" + q);
-        if(campo.value.trim().length < 3){ $("err").textContent = "Responde la pregunta " + (q+1) + " para poder enviar."; campo.focus(); return; }
-      }
       var lista = items.map(function(_, i){ return resp[i]; });
       var prom = LIKERT.dimensiones.map(function(d, di){ var s = 0, k = 0; items.forEach(function(it, i){ if(it.dim === di){ s += resp[i]; k++; } }); return Math.round(s / k * 100) / 100; });
       var d = { clave:REGISTRO.clave, t:new Date().toISOString(), nombre:nombre, curso:curso, parte:"Encuesta (archivo aparte)", mision:"", evento:"likert",
