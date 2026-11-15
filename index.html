@@ -1280,7 +1280,11 @@ var LIKERT = {
       "Sentí apoyo de mis compañeros cuando tuve dificultades durante los retos.",
       "La actividad favoreció la comunicación y el trabajo en equipo con mis compañeros.",
       "Me sentí parte de un grupo durante el desarrollo de la unidad didáctica.",
-      "Compartir ideas con mis compañeros ayudó a comprender mejor los contenidos." ] }
+      "Compartir ideas con mis compañeros ayudó a comprender mejor los contenidos." ] },
+    { nombre:"Motivación general hacia la estrategia", color:"#1f6fa8", items:[
+      "Me sentí motivado/a al participar en las actividades gamificadas.",
+      "Prefiero aprender Ciencias Sociales a través de actividades gamificadas que con clases tradicionales.",
+      "Me gustaría que se usaran más estrategias como esta en otras asignaturas." ] }
   ],
   abiertas:["¿Qué fue lo que más te gustó de las actividades gamificadas?","¿Qué dificultades tuviste durante las actividades?"]
 };
@@ -2296,7 +2300,8 @@ var IMG_ESTUDIANTES = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
     if($("lk-enviar")) $("lk-enviar").onclick = function(){
       var resp = lkItems.map(function(_, i){ return lkResp[i] || ""; });
       var prom = LIKERT.dimensiones.map(function(d, di){ var s = 0, k = 0; lkItems.forEach(function(it, i){ if(it.dim === di && lkResp[i]){ s += lkResp[i]; k++; } }); return k ? Math.round(s / k * 100) / 100 : ""; });
-      registrar("likert", "", "Cuestionario final", { likert:resp, promedios:prom, abiertas:[ $("lk-ab0").value.trim(), $("lk-ab1").value.trim() ] });
+      var NB = lkItems.filter(function(it){ return it.dim < 3; }).length; /* ítems 16-18 y su promedio van al final de la fila */
+      registrar("likert", "", "Cuestionario final", { likert:resp.slice(0, NB), promedios:prom.slice(0, 3), abiertas:[ $("lk-ab0").value.trim(), $("lk-ab1").value.trim() ].concat(resp.slice(NB), prom.slice(3)) });
       guardar("rams_likert", hoyLocal()); guardar("rams_likert_borrador", "");
       lkPaso = -2; pintarLikert(); lluvia();
     };

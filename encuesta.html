@@ -85,7 +85,11 @@ var LIKERT = {
       "Sentí apoyo de mis compañeros cuando tuve dificultades durante los retos.",
       "La actividad favoreció la comunicación y el trabajo en equipo con mis compañeros.",
       "Me sentí parte de un grupo durante el desarrollo de la unidad didáctica.",
-      "Compartir ideas con mis compañeros ayudó a comprender mejor los contenidos." ] }
+      "Compartir ideas con mis compañeros ayudó a comprender mejor los contenidos." ] },
+    { nombre:"Motivación general hacia la estrategia", color:"#1f6fa8", items:[
+      "Me sentí motivado/a al participar en las actividades gamificadas.",
+      "Prefiero aprender Ciencias Sociales a través de actividades gamificadas que con clases tradicionales.",
+      "Me gustaría que se usaran más estrategias como esta en otras asignaturas." ] }
   ],
   abiertas:["¿Qué fue lo que más te gustó de las actividades gamificadas?","¿Qué dificultades tuviste durante las actividades?"]
 };
@@ -97,6 +101,8 @@ var LIKERT = {
   var items = [];
   LIKERT.dimensiones.forEach(function(d, di){ d.items.forEach(function(t){ items.push({ dim:di, txt:t }); }); });
   var N = items.length, resp = {}, paso = -2;
+  /* Ítems 1-15 (dimensiones 1 a 3) van en las columnas originales de la hoja; los ítems 16-18 y su promedio se agregan al final de la fila. */
+  var NB = items.filter(function(it){ return it.dim < 3; }).length;
   try{ resp = JSON.parse(leer("rams_likert_borrador") || "{}") || {}; }catch(e){ resp = {}; }
   var nombre = leer("rams_nombre") || "", curso = leer("rams_curso") || "";
   var idDisp = leer("rams_id"); if(!idDisp){ idDisp = Math.random().toString(36).slice(2,10); guardar("rams_id", idDisp); }
@@ -157,7 +163,8 @@ var LIKERT = {
       var lista = items.map(function(_, i){ return resp[i]; });
       var prom = LIKERT.dimensiones.map(function(d, di){ var s = 0, k = 0; items.forEach(function(it, i){ if(it.dim === di){ s += resp[i]; k++; } }); return Math.round(s / k * 100) / 100; });
       var d = { clave:REGISTRO.clave, t:new Date().toISOString(), nombre:nombre, curso:curso, parte:"Encuesta (archivo aparte)", mision:"", evento:"likert",
-                detalle:"Cuestionario final", hojas:null, id:idDisp, likert:lista, promedios:prom, abiertas:[$("ab0").value.trim(), $("ab1").value.trim()] };
+                detalle:"Cuestionario final", hojas:null, id:idDisp, likert:lista.slice(0, NB), promedios:prom.slice(0, 3),
+                abiertas:[$("ab0").value.trim(), $("ab1").value.trim()].concat(lista.slice(NB), prom.slice(3)) };
       var c2 = cola(); c2.push(d); guardar("rams_cola", JSON.stringify(c2)); enviar();
       var hoy = new Date(); guardar("rams_likert", hoy.getFullYear()+"-"+(hoy.getMonth()+1)+"-"+hoy.getDate()); guardar("rams_likert_borrador", "");
       paso = -3; pintar();
