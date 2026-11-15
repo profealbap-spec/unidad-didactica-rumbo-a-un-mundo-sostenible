@@ -48,6 +48,21 @@ textarea{min-height:90px;resize:vertical}
 .estrella{font-size:90px;line-height:1;color:var(--oro);text-shadow:0 4px 0 var(--navy);animation:pop 1s cubic-bezier(.3,1.5,.5,1) both}
 @keyframes pop{from{transform:scale(.2) rotate(-180deg);opacity:0}to{transform:none;opacity:1}}
 .nota{font-size:14px;color:#5d6f8f;font-weight:600}
+
+/* ---- formato de tabla, igual al anexo ---- */
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px;font-weight:700;background:#eef3fb;border-radius:12px;padding:8px 12px}
+.dimt{margin:6px 0 0;font-size:18px;font-weight:800;color:#fff;border-radius:12px 12px 0 0;padding:6px 12px}
+table.lk{width:100%;border-collapse:collapse;font-size:16px;margin-top:-14px}
+table.lk th,table.lk td{border:2px solid #c9d3e3;padding:6px 6px;vertical-align:middle}
+table.lk thead th{background:#0b2350;color:#fff;font-weight:800;font-size:15px}
+table.lk td.n{width:40px;text-align:center;font-weight:800}
+table.lk td.t{font-weight:600;line-height:1.3}
+table.lk th.v,table.lk td.v{width:46px;text-align:center;padding:0}
+table.lk td.v label{display:flex;align-items:center;justify-content:center;min-height:46px;cursor:pointer}
+table.lk input[type=radio]{width:24px;height:24px;margin:0;accent-color:#2f9e44;cursor:pointer}
+table.lk tr.falta td{background:#fde8e8}
+table.lk tr.ok td.n{color:#2f9e44}
+@media (max-width:560px){.wrap{padding-left:8px;padding-right:8px}.card{padding:12px 8px;border-width:3px}table.lk{font-size:14px}table.lk th,table.lk td{padding:4px}table.lk th.v,table.lk td.v{width:30px;padding:0}table.lk td.n{width:30px}table.lk input[type=radio]{width:20px;height:20px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -100,7 +115,7 @@ var LIKERT = {
   var $ = function(id){ return document.getElementById(id); };
   var items = [];
   LIKERT.dimensiones.forEach(function(d, di){ d.items.forEach(function(t){ items.push({ dim:di, txt:t }); }); });
-  var N = items.length, resp = {}, paso = -2;
+  var N = items.length, resp = {}, paso = 0;
   /* Ítems 1-15 (dimensiones 1 a 3) van en las columnas originales de la hoja; los ítems 16-18 y su promedio se agregan al final de la fila. */
   var NB = items.filter(function(it){ return it.dim < 3; }).length;
   try{ resp = JSON.parse(leer("rams_likert_borrador") || "{}") || {}; }catch(e){ resp = {}; }
@@ -118,48 +133,52 @@ var LIKERT = {
 
   function pintar(){
     var c = $("card"), h = "";
-    $("prog").textContent = paso >= 0 && paso < N ? (paso+1) + "/" + N : "";
-    $("barra").style.width = (paso < 0 ? 0 : Math.min(paso, N) / N * 100) + "%";
     if(paso === -3){
+      $("prog").textContent = ""; $("barra").style.width = "100%";
       h = '<div class="card final" style="border:0;box-shadow:none;padding:0"><span class="estrella">★</span><p class="item">¡Misión Bonus completada, '+esc(nombre.split(" ")[0])+'!</p><p>Alcanzaste el <b>Nivel Súper Experto</b> de Rumbo a un Mundo Sostenible. Gracias por compartir tu opinión: nos ayuda a mejorar la unidad.</p><p class="nota">Tus respuestas quedaron registradas. Ya puedes cerrar esta página.</p></div>';
-    } else if(paso === -2){
-      h = '<p class="item">Antes de empezar</p><p>Escribe tu nombre y apellido y tu curso.</p>'+
-        '<div class="fila"><div><label for="nom">Nombre y apellido</label><input id="nom" autocomplete="off" autocapitalize="words" maxlength="40" value="'+esc(nombre)+'"></div>'+
-        '<div><label for="cur">Curso</label><input id="cur" inputmode="numeric" maxlength="4" placeholder="1001" value="'+esc(curso)+'"></div></div>'+
-        '<p class="error" id="err"></p><div class="nav"><span></span><button class="btn" id="sig" type="button">Continuar ▸</button></div>';
-    } else if(paso === -1){
-      h = '<span class="etq" style="background:#c98a12">Instrucciones</span><p class="item">Tu opinión es muy importante</p>'+
-        '<p>Lee cada afirmación con atención y elige la opción que mejor represente tu grado de acuerdo, según esta escala: 1 = Totalmente en desacuerdo · 2 = En desacuerdo · 3 = Ni de acuerdo ni en desacuerdo · 4 = De acuerdo · 5 = Totalmente de acuerdo.</p>'+
-        '<p><b>No hay respuestas correctas o incorrectas; responde con honestidad.</b> Esto no es una evaluación.</p>'+
-        '<div class="nav"><button class="btn sec" id="atr" type="button">◂ Atrás</button><button class="btn" id="sig" type="button">Comenzar ▸</button></div>';
-    } else if(paso < N){
-      var it = items[paso], D = LIKERT.dimensiones[it.dim];
-      h = '<span class="etq" style="background:'+D.color+'">Dimensión '+(it.dim+1)+'. '+D.nombre+'</span><p class="item">'+(paso+1)+'. '+it.txt+'</p>'+
-        '<div class="escala">'+LIKERT.escala.map(function(e, i){ return '<button type="button" class="op'+(resp[paso]===i+1?' sel':'')+'" data-v="'+(i+1)+'"><b>'+(i+1)+'</b>'+e+'</button>'; }).join("")+'</div>'+
-        '<div class="nav"><button class="btn sec" id="atr" type="button">◂ Atrás</button><button class="btn" id="sig" type="button"'+(resp[paso]?'':' disabled')+'>Siguiente ▸</button></div>';
-    } else {
-      h = '<p class="item">Preguntas abiertas (opcional)</p>'+LIKERT.abiertas.map(function(q, i){ return '<label for="ab'+i+'">'+(i+1)+'. '+q+'</label><textarea id="ab'+i+'" maxlength="500"></textarea>'; }).join("")+
-        '<p class="error" id="err"></p><div class="nav"><button class="btn sec" id="atr" type="button">◂ Atrás</button><button class="btn" id="env" type="button">Enviar respuestas ▸</button></div>';
+      c.innerHTML = h; window.scrollTo(0, 0); return;
     }
-    c.innerHTML = h; c.style.animation = "none"; void c.offsetWidth; c.style.animation = "";
-    c.querySelectorAll(".op").forEach(function(b){ b.onclick = function(){
-      resp[paso] = +b.dataset.v; guardar("rams_likert_borrador", JSON.stringify(resp));
-      c.querySelectorAll(".op").forEach(function(x){ x.classList.toggle("sel", x === b); });
-      $("sig").disabled = false; setTimeout(function(){ paso++; pintar(); }, 320);
+    var n = 0, tabla = "";
+    LIKERT.dimensiones.forEach(function(D, di){
+      tabla += '<p class="dimt" style="background:'+D.color+'">Dimensión '+(di+1)+'. '+D.nombre+'</p>'+
+        '<table class="lk"><thead><tr><th>N°</th><th>Ítem</th>'+[1,2,3,4,5].map(function(v){ return '<th class="v">'+v+'</th>'; }).join("")+'</tr></thead><tbody>';
+      D.items.forEach(function(t){
+        var i = n++;
+        tabla += '<tr id="fila'+i+'"'+(resp[i]?' class="ok"':'')+'><td class="n">'+(i+1)+'</td><td class="t">'+esc(t)+'</td>'+
+          [1,2,3,4,5].map(function(v){ return '<td class="v"><label><input type="radio" name="it'+i+'" value="'+v+'"'+(resp[i]===v?' checked':'')+' aria-label="Ítem '+(i+1)+': '+esc(LIKERT.escala[v-1])+'"></label></td>'; }).join("")+'</tr>';
+      });
+      tabla += '</tbody></table>';
+    });
+    h = '<p class="item">Instrucciones</p>'+
+      '<p>Lee cada afirmación con atención y marca la opción que mejor represente tu grado de acuerdo. <b>No hay respuestas correctas o incorrectas; responde con honestidad.</b> Esto no es una evaluación.</p>'+
+      '<div class="fila"><div><label for="nom">Nombre y apellido</label><input id="nom" autocomplete="off" autocapitalize="words" maxlength="40" value="'+esc(nombre)+'"></div>'+
+      '<div><label for="cur">Curso</label><input id="cur" inputmode="numeric" maxlength="4" placeholder="1005" value="'+esc(curso)+'"></div></div>'+
+      '<div class="leyenda">'+LIKERT.escala.map(function(e, i){ return '<span>'+(i+1)+' = '+e+'</span>'; }).join("")+'</div>'+
+      tabla+
+      '<p class="item" style="margin-top:8px">Preguntas abiertas (opcional)</p>'+
+      LIKERT.abiertas.map(function(q, i){ return '<label for="ab'+i+'">'+(N+i+1)+'. '+q+'</label><textarea id="ab'+i+'" maxlength="500"></textarea>'; }).join("")+
+      '<p class="error" id="err" role="alert"></p><div class="nav"><span></span><button class="btn" id="env" type="button">Enviar respuestas ▸</button></div>';
+    c.innerHTML = h;
+    function progreso(){
+      var k = items.filter(function(_, i){ return resp[i]; }).length;
+      $("prog").textContent = k + "/" + N; $("barra").style.width = (k / N * 100) + "%";
+    }
+    progreso();
+    c.querySelectorAll('input[type=radio]').forEach(function(r){ r.onchange = function(){
+      var i = +r.name.slice(2); resp[i] = +r.value; guardar("rams_likert_borrador", JSON.stringify(resp));
+      var f = $("fila"+i); f.classList.remove("falta"); f.classList.add("ok"); progreso();
     }; });
-    if($("atr")) $("atr").onclick = function(){ paso--; pintar(); };
-    if($("sig")) $("sig").onclick = function(){
-      if(paso === -2){
-        var n = $("nom").value.trim().replace(/\s+/g," "), cu = $("cur").value.replace(/\s+/g,"");
-        if(n.length < 3){ $("err").textContent = "Escribe tu nombre y apellido."; return; }
-        if(!/^\d{3,4}$/.test(cu)){ $("err").textContent = "Escribe tu curso, por ejemplo 1001."; return; }
-        nombre = n; curso = cu; guardar("rams_nombre", n); guardar("rams_curso", cu);
-      }
-      paso++; pintar();
-    };
-    if($("env")) $("env").onclick = function(){
+    $("env").onclick = function(){
+      var nn = $("nom").value.trim().replace(/\s+/g," "), cu = $("cur").value.replace(/\s+/g,"");
+      if(nn.length < 3){ $("err").textContent = "Escribe tu nombre y apellido."; $("nom").focus(); return; }
+      if(!/^\d{3,4}$/.test(cu)){ $("err").textContent = "Escribe tu curso, por ejemplo 1005."; $("cur").focus(); return; }
+      nombre = nn; curso = cu; guardar("rams_nombre", nn); guardar("rams_curso", cu);
       var faltan = items.map(function(_, i){ return resp[i] ? 0 : i+1; }).filter(Boolean);
-      if(faltan.length){ $("err").textContent = "Te faltan los ítems: " + faltan.join(", ") + ". Usa «Atrás» para responderlos."; return; }
+      if(faltan.length){
+        faltan.forEach(function(k){ $("fila"+(k-1)).classList.add("falta"); });
+        $("err").textContent = "Te faltan los ítems: " + faltan.join(", ") + ". Están marcados en rojo.";
+        $("fila"+(faltan[0]-1)).scrollIntoView({ behavior:"smooth", block:"center" }); return;
+      }
       var lista = items.map(function(_, i){ return resp[i]; });
       var prom = LIKERT.dimensiones.map(function(d, di){ var s = 0, k = 0; items.forEach(function(it, i){ if(it.dim === di){ s += resp[i]; k++; } }); return Math.round(s / k * 100) / 100; });
       var d = { clave:REGISTRO.clave, t:new Date().toISOString(), nombre:nombre, curso:curso, parte:"Encuesta (archivo aparte)", mision:"", evento:"likert",
