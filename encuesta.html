@@ -131,21 +131,54 @@ var LIKERT = {
   }
   window.addEventListener("online", enviar); setTimeout(enviar, 2000);
 
+  var modo = "completo", verificando = false;   /* "completo": 18 ítems · "faltante": solo la Dimensión 4 */
+  function visibles(){ return items.map(function(_, i){ return i; }).filter(function(i){ return modo === "completo" || items[i].dim >= 3; }); }
+  function progreso(){
+    if(paso !== 1){ $("prog").textContent = ""; $("barra").style.width = "0%"; return; }
+    var v = visibles(), k = v.filter(function(i){ return resp[i]; }).length;
+    $("prog").textContent = k + "/" + v.length; $("barra").style.width = (k / v.length * 100) + "%";
+  }
+  function verificar(){
+    var nn = $("nom").value.trim().replace(/\s+/g," "), cu = $("cur").value.replace(/\s+/g,"");
+    if(nn.length < 3){ $("err0").textContent = "Escribe tu nombre y apellido."; $("nom").focus(); return; }
+    if(!/^\d{3,4}$/.test(cu)){ $("err0").textContent = "Escribe tu curso, por ejemplo 1005."; $("cur").focus(); return; }
+    nombre = nn; curso = cu; guardar("rams_nombre", nn); guardar("rams_curso", cu);
+    verificando = true; $("sig0").disabled = true; $("sig0").textContent = "Verificando…"; $("err0").textContent = "";
+    var q = REGISTRO.url + "?consulta=likert&clave=" + encodeURIComponent(REGISTRO.clave) + "&nombre=" + encodeURIComponent(nn) + "&curso=" + encodeURIComponent(cu);
+    fetch(q).then(function(r){ return r.json(); }).then(function(j){
+      if(!j || !j.ok) throw new Error("sin respuesta");
+      modo = j.respondido ? "faltante" : "completo"; paso = 1; verificando = false; pintar();
+    }).catch(function(){
+      verificando = false; $("sig0").disabled = false; $("sig0").textContent = "Intentar de nuevo ▸";
+      $("err0").textContent = "No se pudo verificar si ya respondiste. Revisa tu conexión a internet e intenta de nuevo.";
+    });
+  }
   function pintar(){
     var c = $("card"), h = "";
+    progreso();
     if(paso === -3){
-      $("prog").textContent = ""; $("barra").style.width = "100%";
+      $("barra").style.width = "100%";
       c.innerHTML = '<div class="secc final"><span class="estrella">★</span><p class="item">¡Misión Bonus completada, '+esc(nombre.split(" ")[0])+'!</p><p>Alcanzaste el <b>Nivel Súper Experto</b> de Rumbo a un Mundo Sostenible. Gracias por compartir tu opinión: nos ayuda a mejorar la unidad.</p><p class="nota">Tus respuestas quedaron registradas. Ya puedes cerrar esta página.</p></div>';
       window.scrollTo(0, 0); return;
     }
-    h = '<section class="secc"><span class="etq" style="background:var(--navy)">Antes de empezar</span><p>Escribe tu nombre y apellido y tu curso.</p>'+
-      '<div class="fila"><div><label for="nom">Nombre y apellido</label><input id="nom" autocomplete="off" autocapitalize="words" maxlength="40" value="'+esc(nombre)+'"></div>'+
-      '<div><label for="cur">Curso</label><input id="cur" inputmode="numeric" maxlength="4" placeholder="1005" value="'+esc(curso)+'"></div></div></section>'+
+    if(paso === 0){
+      c.innerHTML = '<section class="secc"><span class="etq" style="background:var(--navy)">Antes de empezar</span><p>Escribe tu nombre y apellido y tu curso <b>igual que la primera vez que entraste a la unidad</b>.</p>'+
+        '<div class="fila"><div><label for="nom">Nombre y apellido</label><input id="nom" autocomplete="off" autocapitalize="words" maxlength="40" value="'+esc(nombre)+'"></div>'+
+        '<div><label for="cur">Curso</label><input id="cur" inputmode="numeric" maxlength="4" placeholder="1005" value="'+esc(curso)+'"></div></div>'+
+        '<p class="error" id="err0" role="alert"></p><div class="nav"><span></span><button class="btn" id="sig0" type="button">Continuar ▸</button></div></section>';
+      $("sig0").onclick = verificar;
+      $("cur").onkeydown = function(e){ if(e.key === "Enter") verificar(); };
+      return;
+    }
+    h = '<section class="secc"><span class="etq" style="background:var(--navy)">Estudiante</span><p><b>'+esc(nombre)+'</b> · Curso '+esc(curso)+'</p>'+
+      (modo === "faltante" ? '<p>Ya habías respondido la primera parte del cuestionario. <b>Solo te faltan las preguntas 16, 17 y 18</b>.</p>' : '')+
+      '<div class="nav"><button class="btn sec" id="cambiar" type="button">◂ No soy yo</button><span></span></div></section>'+
       '<section class="secc"><span class="etq" style="background:#c98a12">Instrucciones</span><p class="item">Tu opinión es muy importante</p>'+
       '<p>Lee cada afirmación con atención y elige la opción que mejor represente tu grado de acuerdo. <b>No hay respuestas correctas o incorrectas; responde con honestidad.</b> Esto no es una evaluación.</p>'+
       '<div class="ley">'+LIKERT.escala.map(function(e, i){ return '<span class="op" data-v="'+(i+1)+'" style="cursor:default;display:inline-block;min-height:0">'+(i+1)+' '+e+'</span>'; }).join("")+'</div></section>';
     var n = 0;
     LIKERT.dimensiones.forEach(function(D, di){
+      if(modo === "faltante" && di < 3){ n += D.items.length; return; }
       h += '<section class="secc"><span class="etq" style="background:'+D.color+'">Dimensión '+(di+1)+'. '+D.nombre+'</span>';
       D.items.forEach(function(t){
         var i = n++;
@@ -154,37 +187,34 @@ var LIKERT = {
       });
       h += '</section>';
     });
-    h += '<section class="secc"><span class="etq" style="background:var(--navy)">Preguntas abiertas (opcional)</span>'+
-      LIKERT.abiertas.map(function(q, i){ return '<label for="ab'+i+'">'+(i+1)+'. '+q+'</label><textarea id="ab'+i+'" maxlength="500"></textarea>'; }).join("")+
+    h += '<section class="secc">'+(modo === "completo" ? '<span class="etq" style="background:var(--navy)">Preguntas abiertas (opcional)</span>'+
+      LIKERT.abiertas.map(function(q, i){ return '<label for="ab'+i+'">'+(i+1)+'. '+q+'</label><textarea id="ab'+i+'" maxlength="500"></textarea>'; }).join("") : '')+
       '<p class="error" id="err" role="alert"></p><div class="nav"><span></span><button class="btn" id="env" type="button">Enviar respuestas ▸</button></div></section>';
     c.innerHTML = h;
     c.querySelectorAll(".ley .op").forEach(function(x){ x.style.padding = "2px 10px"; x.style.fontSize = "14px"; x.style.borderRadius = "999px"; });
-    function progreso(){
-      var k = items.filter(function(_, i){ return resp[i]; }).length;
-      $("prog").textContent = k + "/" + N; $("barra").style.width = (k / N * 100) + "%";
-    }
     progreso();
+    $("cambiar").onclick = function(){ paso = 0; pintar(); };
     c.querySelectorAll(".fila5 .op").forEach(function(b){ b.onclick = function(){
       var i = +b.dataset.i; resp[i] = +b.dataset.v; guardar("rams_likert_borrador", JSON.stringify(resp));
       b.parentNode.querySelectorAll(".op").forEach(function(x){ var s = x === b; x.classList.toggle("sel", s); x.setAttribute("aria-checked", s); });
       $("preg"+i).classList.remove("falta"); progreso();
     }; });
     $("env").onclick = function(){
-      var nn = $("nom").value.trim().replace(/\s+/g," "), cu = $("cur").value.replace(/\s+/g,"");
-      if(nn.length < 3){ $("err").textContent = "Escribe tu nombre y apellido (al inicio de la página)."; $("nom").focus(); return; }
-      if(!/^\d{3,4}$/.test(cu)){ $("err").textContent = "Escribe tu curso, por ejemplo 1005 (al inicio de la página)."; $("cur").focus(); return; }
-      nombre = nn; curso = cu; guardar("rams_nombre", nn); guardar("rams_curso", cu);
-      var faltan = items.map(function(_, i){ return resp[i] ? 0 : i+1; }).filter(Boolean);
+      var faltan = visibles().filter(function(i){ return !resp[i]; }).map(function(i){ return i+1; });
       if(faltan.length){
         faltan.forEach(function(k){ $("preg"+(k-1)).classList.add("falta"); });
         $("err").textContent = "Te faltan los ítems: " + faltan.join(", ") + ". Están marcados en rojo.";
         $("preg"+(faltan[0]-1)).scrollIntoView({ behavior:"smooth", block:"center" }); return;
       }
-      var lista = items.map(function(_, i){ return resp[i]; });
-      var prom = LIKERT.dimensiones.map(function(d, di){ var s = 0, k = 0; items.forEach(function(it, i){ if(it.dim === di){ s += resp[i]; k++; } }); return Math.round(s / k * 100) / 100; });
-      var d = { clave:REGISTRO.clave, t:new Date().toISOString(), nombre:nombre, curso:curso, parte:"Encuesta (archivo aparte)", mision:"", evento:"likert",
-                detalle:"Cuestionario final", hojas:null, id:idDisp, likert:lista.slice(0, NB), promedios:prom.slice(0, 3),
-                abiertas:[$("ab0").value.trim(), $("ab1").value.trim()].concat(lista.slice(NB), prom.slice(3)) };
+      var lista = items.map(function(_, i){ return resp[i] || ""; });
+      var prom = LIKERT.dimensiones.map(function(d, di){ var s = 0, k = 0; items.forEach(function(it, i){ if(it.dim === di && resp[i]){ s += resp[i]; k++; } }); return k ? Math.round(s / k * 100) / 100 : ""; });
+      var d = { clave:REGISTRO.clave, t:new Date().toISOString(), nombre:nombre, curso:curso, parte:"Encuesta (archivo aparte)", mision:"", hojas:null, id:idDisp };
+      if(modo === "faltante"){
+        d.evento = "likert_motivacion"; d.detalle = "Ítems 16-18 (Motivación general)"; d.motivacion = lista.slice(NB).concat(prom.slice(3));
+      } else {
+        d.evento = "likert"; d.detalle = "Cuestionario final"; d.likert = lista.slice(0, NB); d.promedios = prom.slice(0, 3);
+        d.abiertas = [$("ab0").value.trim(), $("ab1").value.trim()].concat(lista.slice(NB), prom.slice(3));
+      }
       var c2 = cola(); c2.push(d); guardar("rams_cola", JSON.stringify(c2)); enviar();
       var hoy = new Date(); guardar("rams_likert", hoy.getFullYear()+"-"+(hoy.getMonth()+1)+"-"+hoy.getDate()); guardar("rams_likert_borrador", "");
       paso = -3; pintar();
